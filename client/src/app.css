@@ -1,0 +1,19 @@
+/* Write your global styles here, in PostCSS syntax */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body{
+  @apply min-h-full;
+}
+
+body{
+  @apply text-light bg-dark overflow-y-scroll;
+}
+
+::-webkit-scrollbar {
+	width: 4px;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-primary-default;
+}

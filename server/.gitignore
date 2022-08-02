@@ -1,0 +1,6 @@
+/parts
+drawings.db
+/node_modules
+.env
+.env.*
+
