@@ -6,14 +6,14 @@ const config = {
 	theme: {
 		extend: {
 			colors: {
-				dark: '#1B1919',
-				light: "#FFFFFF",
+				dark: '#F0F0FE',
+				gray: '#E2E2FD',
+				light: "#222222",
 				primary: {
 					default: '#6366F1',
 					light: '#ACA5FF',
 					dark: '#ACA5FF'
-				},
-				secondary: "#6366F1",
+				}
 			}
 		}
 	},

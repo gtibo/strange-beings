@@ -18,8 +18,8 @@ const dispatch = createEventDispatcher();
 export let previousPart = undefined, is_last_part = false;
 
 let canvas, ctx;
-let max_w = import.meta.env.VITE_DRAWING_WIDTH,
-    max_h = import.meta.env.VITE_DRAWING_HEIGHT;
+let max_w = 640,
+    max_h = 370;
 let background;
 let history = [],
   currentHistory = 0;
@@ -171,7 +171,7 @@ let cursor = {
 let currentTool = pen,
   currentToolName = "pen";
 let knownSizes = [4, 10, 16, 24, 40, 80];
-let sizeIndex = 1;
+let sizeIndex = 0;
 $: currentSize = knownSizes[sizeIndex];
 
 function selectTool(toolName) {
@@ -235,79 +235,47 @@ function zoneCoverage(x, y, width, height) {
 
 <main class="board">
   <header class="canHide flex pointer-events-none justify-between" class:shouldHide={cursor_active}>
-    <div class="flex items-center gap-2 pointer-events-auto">
+    <div class="header-left flex items-center gap-2 pointer-events-auto">
       <button
-      class="flex gap-2 items-center p-3 rounded-full bg-green-500"
+      class="btn rounded-xl"
       on:click={requestConfirm}>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 fill-light" viewBox="0 0 20 20">
+        <svg xmlns="http://www.w3.org/2000/svg" class="fill-dark" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
         </svg>
-        Confirm
+        <span id="submit-text" class="mx-1 font-bold text-dark">Submit</span>
       </button>
       <button
-      class="p-3 rounded-full bg-orange-500"
+      class="btn small dark rounded-xl"
       on:click={()=>{dispatch('cancel')}}>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 fill-slate-50" viewBox="0 0 20 20">
+        <svg xmlns="http://www.w3.org/2000/svg" class="fill-dark" viewBox="0 0 20 20">
           <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
         </svg>
       </button>
     </div>
 
-    <section class="flex items-center gap-2 pointer-events-auto">
+    <div class="header-right flex items-center gap-2 pointer-events-auto">
+      <div class="btn-group">
+        <button class="btn" disabled={(currentHistory) < 1} on:click={goBackward}>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+          <path d="M11.8906 5.0729L5.49619 9.33587C4.30872 10.1275 4.30872 11.8724 5.49619 12.6641L11.8906 16.927C13.2198 17.8131 15 16.8603 15 15.2629V12.5H18C21.0376 12.5 23.5 14.9624 23.5 18C23.5 21.0375 21.0376 23.5 18 23.5H12.5C11.6716 23.5 11 24.1715 11 25C11 25.8284 11.6716 26.5 12.5 26.5H18C22.6945 26.5 26.5 22.6944 26.5 18C26.5 13.3056 22.6945 9.49997 18 9.49997H15V6.73701C15 5.13961 13.2197 4.18683 11.8906 5.0729Z"/>
+          </svg>
+        </button>
+        <button class="btn" disabled={(currentHistory) == history.length-1} on:click={goForward}>
+          <svg xmlns="http://www.w3.org/2000/svg" class="" viewBox="0 0 32 32" fill="none">
+          <path d="M19.215 5.0729L25.6094 9.33587C26.7969 10.1275 26.7969 11.8724 25.6094 12.6641L19.2149 16.927C17.8858 17.8131 16.1056 16.8603 16.1056 15.2629V12.5H13.1055C10.068 12.5 7.60555 14.9624 7.60555 18C7.60555 21.0375 10.068 23.5 13.1055 23.5H18.6056C19.434 23.5 20.1056 24.1715 20.1056 25C20.1056 25.8284 19.434 26.5 18.6056 26.5H13.1055C8.41113 26.5 4.60555 22.6944 4.60555 18C4.60555 13.3056 8.41113 9.49997 13.1055 9.49997H16.1056V6.73701C16.1056 5.13961 17.8858 4.18683 19.215 5.0729Z"
+          />
+          </svg>
+        </button>
+      </div>
 
-    <input id="draw-mode" class="hidden" type="checkbox" bind:checked={draw_behind} />
-    <label for="draw-mode" class="flex gap-2 items-center font-semibold select-none bg-black/80 py-2 px-3 rounded-xl">
-
-      {#if draw_behind}
-      <svg class="w-4 h-4 md:w-8 md:h-8" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect class="fill-primary-default" x="3" y="3" width="17.3333" height="17.3333"/>
-        <rect class="fill-light" x="11.6667" y="11.6667" width="17.3333" height="17.3333"/>
-      </svg>
-      {:else}
-      <svg class="w-4 h-4 md:w-8 md:h-8" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect class="fill-light" x="11.6667" y="11.6667" width="17.3333" height="17.3333"/>
-        <rect class="fill-primary-default" x="3" y="3" width="17.3333" height="17.3333"/>
-      </svg>
-      {/if}
-
-      <p class="text-xs font-mono md:text-sm">{(draw_behind)?"Draw behind":"Draw on top"}</p>
-    </label>
-
-
-    <div class="btn-group">
-      <button class="btn" on:click={()=>{selectTool("pen")}} class:selected={currentToolName != "pen"}>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-        </svg>
-      </button>
-      <button class="btn" on:click={()=>{selectTool("eraser")}} class:selected={currentToolName != "eraser"}>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 32 32" fill="none">
-        <path d="M8.09448 12.906L15.4647 5.53578C17.4173 3.58316 20.5832 3.58316 22.5358 5.53578L27.7615 10.7615C29.7142 12.7142 29.7142 15.88 27.7615 17.8326L20.3913 25.2028L8.09448 12.906Z"/>
-        <path d="M4.32966 16.6703L6.70312 14.2969L18.9999 26.5937C16.623 28.9707 12.7691 28.9707 10.3922 26.5937L4.32966 20.5312C3.26352 19.465 3.26352 17.7365 4.32966 16.6703Z"/>
-        </svg>
-      </button>
-    </div>
-
-    <div class="btn-group">
-      <button class="btn" disabled={(currentHistory) < 1} on:click={goBackward}>
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <path d="M11.8906 5.0729L5.49619 9.33587C4.30872 10.1275 4.30872 11.8724 5.49619 12.6641L11.8906 16.927C13.2198 17.8131 15 16.8603 15 15.2629V12.5H18C21.0376 12.5 23.5 14.9624 23.5 18C23.5 21.0375 21.0376 23.5 18 23.5H12.5C11.6716 23.5 11 24.1715 11 25C11 25.8284 11.6716 26.5 12.5 26.5H18C22.6945 26.5 26.5 22.6944 26.5 18C26.5 13.3056 22.6945 9.49997 18 9.49997H15V6.73701C15 5.13961 13.2197 4.18683 11.8906 5.0729Z"/>
-        </svg>
-      </button>
-      <button class="btn" disabled={(currentHistory) == history.length-1} on:click={goForward}>
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 32 32" fill="none">
-        <path d="M19.215 5.0729L25.6094 9.33587C26.7969 10.1275 26.7969 11.8724 25.6094 12.6641L19.2149 16.927C17.8858 17.8131 16.1056 16.8603 16.1056 15.2629V12.5H13.1055C10.068 12.5 7.60555 14.9624 7.60555 18C7.60555 21.0375 10.068 23.5 13.1055 23.5H18.6056C19.434 23.5 20.1056 24.1715 20.1056 25C20.1056 25.8284 19.434 26.5 18.6056 26.5H13.1055C8.41113 26.5 4.60555 22.6944 4.60555 18C4.60555 13.3056 8.41113 9.49997 13.1055 9.49997H16.1056V6.73701C16.1056 5.13961 17.8858 4.18683 19.215 5.0729Z"
-        />
-        </svg>
-      </button>
-    </div>
-      <button class="btn orange rounded-xl" on:click={flush}>
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 32 32" fill="none">
+      <button class="btn rounded-xl" on:click={flush}>
+        <svg xmlns="http://www.w3.org/2000/svg" class="" viewBox="0 0 32 32" fill="none">
         <path fill-rule="evenodd" clip-rule="evenodd" d="M9.34998 7V5.44995C9.34998 2.96467 11.3647 0.949951 13.85 0.949951H19.1833C21.6686 0.949951 23.6833 2.96467 23.6833 5.44995V7H25C26.1046 7 27 7.89543 27 9V12H6V9C6 7.89543 6.89543 7 8 7H9.34998ZM12.35 5.44995C12.35 4.62152 13.0215 3.94995 13.85 3.94995H19.1833C20.0117 3.94995 20.6833 4.62152 20.6833 5.44995V7H12.35V5.44995Z" fill="white"/>
         <path d="M6 14L8.23967 27.3314C8.40149 28.2946 9.23533 29 10.212 29H22.788C23.7647 29 24.5985 28.2946 24.7603 27.3314L27 14H6Z" fill="white"/>
         </svg>
       </button>
-    </section>
+    </div>
+    
   </header>
   <section>
   <div class="canvasHolder">
@@ -349,10 +317,6 @@ function zoneCoverage(x, y, width, height) {
     </div>
   </div>
   </section>
-  <aside class="canHide flex space-x-4" class:shouldHide={cursor_active}>
-    <SizePicker sizes={knownSizes} bind:index={sizeIndex}/>
-    <ColorPicker bind:picked={pickedColor}/>
-  </aside>
 </main>
 
 
@@ -368,7 +332,10 @@ function zoneCoverage(x, y, width, height) {
     @apply rounded-r-xl;
   }
   .btn{
-    @apply p-2 bg-primary-default;
+    @apply p-2 flex justify-center items-center bg-primary-default;
+  }
+  .btn.dark{
+    @apply bg-light;
   }
   .btn:hover{
     @apply bg-primary-dark;
@@ -376,17 +343,8 @@ function zoneCoverage(x, y, width, height) {
   .btn:active{
     @apply bg-primary-light;
   }
-  .btn.orange{
-    @apply bg-orange-500;
-  }
-  .btn.orange{
-    @apply bg-orange-500;
-  }
-  .btn.orange:not(:disabled):active{
-    @apply bg-orange-500/50;
-  }
   .btn:disabled, .btn.selected{
-    @apply bg-light;
+    @apply bg-gray;
   }
   .btn:disabled svg, .btn.selected svg{
     @apply fill-dark;
@@ -395,28 +353,16 @@ function zoneCoverage(x, y, width, height) {
     @apply bg-primary-default;
   }
   .btn svg{
-    @apply fill-dark w-4 h-4 md:w-8 md:h-8;
+    @apply fill-dark w-6 h-6;
+  }
+  .btn.small svg{
+    @apply w-4 h-4;
   }
   .board{
-    @apply gap-2 md:gap-4 p-2 md:p-4;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    grid-template-rows: auto 1fr;
+    @apply flex flex-col gap-2 md:gap-4 p-4;
   }
   .board > header{
-    z-index: 20;
-    grid-column: 1/3;
-    grid-row: 1;
-  }
-  .board > section{
-    grid-row: 2;
-    width:100%;
-    height: 100%;
-  }
-  .board > aside{
-    z-index: 20;
-    grid-column: 2;
-    grid-row: 2;
+    @apply z-20;
   }
   .canHide{
     opacity: 1;
@@ -483,6 +429,30 @@ function zoneCoverage(x, y, width, height) {
       .board {
         width: 100%;
         height: 100%;
+      }
+      .board{
+        justify-content: center;
+      }
+      .board #submit-text{
+        @apply hidden;
+      }
+      .board header{
+        align-items: center;
+      }
+      .board .header-left{
+        flex-direction: column;
+      }
+      .board .header-right{
+        flex-direction: column;
+      }
+      .btn-group{
+        @apply flex flex-col items-center;
+      }
+      .btn-group .btn:first-child{
+        @apply rounded-none rounded-t-xl;
+      }
+      .btn-group .btn:last-child{
+        @apply rounded-none rounded-b-xl;
       }
     }
 

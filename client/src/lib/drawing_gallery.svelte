@@ -80,8 +80,6 @@ async function getPageCount() {
       Load more...
     </button>
   {/await}
-  {:else}
-    No more drawings to fetch...
   {/if}
 {/if}
 </footer>
